@@ -1,0 +1,164 @@
+---
+title: 
+date: "4/4/2023"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r }
+#import dataset & libraries
+#split into training and testing
+#build the model on training 
+#verify the model using testing
+#evaluate and score the model 
+
+my_directory = file.path("C:", "Users", "Matth", "Documents", "R", "STA4241 HW")       
+data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/data.csv")
+
+target <- data$target
+acousticness <- data$acousticness
+danceability <- data$danceability
+duration_ms <- data$duration_ms
+energy <- data$energy
+instrumentalness <- data$instrumentalness
+key <- data$key
+liveness <- data$liveness
+loudness<- data$loudness
+mode <- data$mode
+speechiness <- data$speechiness
+tempo <- data$tempo
+time_signature <- data$time_signature
+valence <- data$valence
+#data
+
+x <- as.matrix(data[,2:14])
+y <- as.numeric(data[,15])
+#x
+```
+
+
+```{r }
+#import dataset & libraries
+library(FNN)
+library(class)
+library(caret)
+
+#split data into training & testing
+train_index = createDataPartition(data$target, p=0.7, list=FALSE)
+#train_index = createDataPartition(data$y, p = .8, list = FALSE)
+training = data[train_index, 2:15]
+testing = data[-train_index, 2:15]
+
+
+#build model on the training set
+model <- train(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + speechiness + tempo + time_signature + valence, data = training, method = "lm")
+
+
+
+#run predictions on the testing set
+prediction1 <- predict(model, newdata = testing)
+#predictions
+
+#evaluate & score the model
+mse <- mean((prediction1 - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse, "\n")
+
+
+
+```
+
+Cross Validaiton for PCA
+```{r}
+library(caret)
+library(FactoMineR) 
+library(e1071)
+
+
+# Perform PCA on the training data
+pca <- prcomp(training[,1:ncol(training)-1], scale. = TRUE)
+
+# Extract first M principal components
+M <- 5
+train_pca <- as.data.frame(predict(pca, training[,1:ncol(training)-1])[,1:M])
+train_pca$target <- training$target
+
+# Train SVM with radial kernel using the first M principal components
+svm_model <- svm(target ~ ., data = train_pca, kernel = "radial")
+
+# Use the trained model to make predictions on the testing data
+test_pca <- as.data.frame(predict(pca, testing[,1:ncol(testing)-1])[,1:M])
+svm_pred <- predict(svm_model, test_pca)
+
+# Evaluate the performance of the model
+mse_pca <- mean((svm_pred - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_pca, "\n")
+sum(svm_pred == testing$target) / nrow(testing$target)
+accuracy <- sum(svm_pred == testing$target) / nrow(testing$target)
+cat("Accuracy:", accuracy, "\n")
+error <- 1 - accuracy
+cat("Error:", error, "\n")
+```
+
+
+```{r }
+# Find smallest M such that principle components explain at least 90% of the information
+variance_ratio <- pca$sdev^2 / sum(pca$sdev^2)
+cumulative_variance_ratio <- cumsum(variance_ratio)
+M <- min(which(cumulative_variance_ratio >= 0.9))
+
+# Extract first M principal components
+train_pca <- as.data.frame(predict(pca, training[,1:ncol(training)-1])[,1:M])
+train_pca$target <- training$target
+
+# Train SVM with radial kernel using the first M principal components
+svm_model <- svm(target ~ ., data = train_pca, kernel = "radial")
+
+# Use the trained model to make predictions on the testing data
+test_pca <- as.data.frame(predict(pca, testing[,1:ncol(testing)-1])[,1:M])
+svm_pred <- predict(svm_model, test_pca)
+
+svm_vals <- as.numeric(svm_pred)
+svm_output = 1*(svm_vals > 0.5)
+
+#Evaluate the Error Rate of the Model
+error_rate_svm_pca <- sum(svm_output != testing$target)/length(testing$target)
+error_rate_svm_pca
+
+#Evaluate the MSE of the model
+mse_pca <- mean((svm_pred - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_pca, "\n")
+
+```
+
+
+```{r }
+# Load the rpart package
+library(rpart)
+
+formula <- target_variable ~ predictor1 + predictor2 + predictor3
+model <- rpart(formula, data = data)
+plot(model)
+
+new_data <- data.frame(predictor1 = c(1, 2, 3), predictor2 = c(4, 5, 6), predictor3 = c(7, 8, 9))
+predictions <- predict(model, newdata = new_data)
+print(predictions)
+
+```
+
+```{r }
+library(randomForest)
+formula <- target ~ acousticness + danceability + duration_ms + energy + instrumentalness +             key + liveness + loudness + mode + speechiness + tempo + time_signature + valence
+# Build the Random Forest model
+model <- randomForest(formula, data = data, ntree = 500, mtry = 3)
+new_data <- data.frame(predictor1 = c(1, 2, 3), predictor2 = c(4, 5, 6), predictor3 = c(7, 8, 9))
+predictions <- predict(model, newdata = new_data)
+
+# View the predictions
+print(predictions)
+```
+
+```{r }
+
+```
