@@ -7,6 +7,7 @@ output:
   pdf_document: default
 ---
 
+Temporary Kaggle Dataset
 ```{r }
 #import dataset & libraries
 #split into training and testing
@@ -31,17 +32,40 @@ speechiness <- data$speechiness
 tempo <- data$tempo
 time_signature <- data$time_signature
 valence <- data$valence
-#data
 
 x <- as.matrix(data[,2:14])
 y <- as.numeric(data[,15])
-#x
+```
+
+January 9th 2020 - January 9th 2021
+```{r }
+#data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/final_spotify_data_attributes_cleaned.csv")
+#data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/final_spotify_data_attributes_no_speech.csv")
+
+#target <- data$target
+#danceability <- data$danceability
+#energy <- data$energy
+#key <- data$key
+#loudness<- data$loudness
+#mode <- data$mode
+##speechiness <- data$speechiness
+#acousticness <- data$acousticness
+#instrumentalness <- data$instrumentalness
+#liveness <- data$liveness
+#valence <- data$valence
+#tempo <- data$tempo
+#duration_ms <- data$duration_ms
+#time_signature <- data$time_signature
+
+#x <- as.matrix(data[,2:14])
+#x <- as.matrix(data[,2:13])
+#y <- as.numeric(data[,1])
 ```
 
 
+Linear Regression Model
 ```{r }
 #import dataset & libraries
-library(FNN)
 library(class)
 library(caret)
 
@@ -50,12 +74,13 @@ train_index = createDataPartition(data$target, p=0.7, list=FALSE)
 #train_index = createDataPartition(data$y, p = .8, list = FALSE)
 training = data[train_index, 2:15]
 testing = data[-train_index, 2:15]
-
+#training = data[train_index, 2:13]
+#testing = data[-train_index, 2:13]
 
 #build model on the training set
-model <- train(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + speechiness + tempo + time_signature + valence, data = training, method = "lm")
+#model <- train(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + speechiness + tempo + time_signature + valence, data = training, method = "lm")
 
-
+model <- train(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence, data = training, method = "lm")
 
 #run predictions on the testing set
 prediction1 <- predict(model, newdata = testing)
@@ -67,6 +92,21 @@ cat("Mean Squared Error (MSE):", mse, "\n")
 
 
 
+```
+KNN 
+```{r }
+library(FNN)
+# define KNN model
+knn_model <- train(target ~ acousticness + danceability + duration_ms + energy + instrumentalness + key + liveness + loudness + mode + speechiness + tempo + time_signature + valence, data = training, method = "knn", trControl = trainControl(method = "cv", number = 10))
+
+print(knn_model)
+
+#run predictions on the testing set
+pred_knn_model <- predict(knn_model, newdata = testing) #cv = 9 for kaggle dataset
+
+#evaluate & score the model
+mse_knn <- mean((pred_knn_model - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_knn, "\n")
 ```
 
 Cross Validaiton for PCA
@@ -92,16 +132,17 @@ test_pca <- as.data.frame(predict(pca, testing[,1:ncol(testing)-1])[,1:M])
 svm_pred <- predict(svm_model, test_pca)
 
 # Evaluate the performance of the model
+cat("\n")
 mse_pca <- mean((svm_pred - testing$target)^2)
 cat("Mean Squared Error (MSE):", mse_pca, "\n")
-sum(svm_pred == testing$target) / nrow(testing$target)
+#sum(svm_pred == testing$target) / nrow(testing$target)
 accuracy <- sum(svm_pred == testing$target) / nrow(testing$target)
 cat("Accuracy:", accuracy, "\n")
 error <- 1 - accuracy
 cat("Error:", error, "\n")
 ```
 
-
+SVM Long way
 ```{r }
 # Find smallest M such that principle components explain at least 90% of the information
 variance_ratio <- pca$sdev^2 / sum(pca$sdev^2)
@@ -113,7 +154,7 @@ train_pca <- as.data.frame(predict(pca, training[,1:ncol(training)-1])[,1:M])
 train_pca$target <- training$target
 
 # Train SVM with radial kernel using the first M principal components
-svm_model <- svm(target ~ ., data = train_pca, kernel = "radial")
+svm_model <- svm(target ~ ., data = train_pca, kernel = "radial", trControl = trainControl(method = "cv", number = 10))
 
 # Use the trained model to make predictions on the testing data
 test_pca <- as.data.frame(predict(pca, testing[,1:ncol(testing)-1])[,1:M])
@@ -124,41 +165,128 @@ svm_output = 1*(svm_vals > 0.5)
 
 #Evaluate the Error Rate of the Model
 error_rate_svm_pca <- sum(svm_output != testing$target)/length(testing$target)
-error_rate_svm_pca
+cat("Error Rate:", error_rate_svm_pca, "\n") 
 
 #Evaluate the MSE of the model
-mse_pca <- mean((svm_pred - testing$target)^2)
-cat("Mean Squared Error (MSE):", mse_pca, "\n")
+mse_svm <- mean((svm_pred - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_svm, "\n")
 
 ```
 
+Need to run these for graph for PCA to display properly
+```{r }
+#install.packages("remotes")
+#remotes::install_github("vqv/ggbiplot")
+#Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
+#install_github("vqv/ggbiplot", force = TRUE)
+```
 
+```{r }
+library(ggbiplot)
+pca_data <- prcomp(data[,2:14], scale. = TRUE)
+ggbiplot(pca_data, obs.scale = 1, var.scale = 1, 
+         groups = target, varname.size = 3, 
+         alpha = 0.5, var.axes = TRUE)
+
+```
+```{r }
+new_data <- data[sample(1:nrow(data), 5), 2:14]
+
+classification <- predict(pca_data, newdata = new_data)
+
+print(classification)
+
+col_means <- colMeans(classification)
+
+print(col_means)
+```
+(pc4 & pc9 & pc13) (pc5 & pc10) (pc3 & pc8) (1, 2, 6, 7, 11, 12 are dissimilar)
+energy, mode, valence (4, 9, 13)
+instrumentalness & speechiness (5, 10)
+duration_ms & loudness (3, 8)
+
+
+
+
+
+Decision Tree
 ```{r }
 # Load the rpart package
 library(rpart)
+library(rpart.plot)
 
-formula <- target_variable ~ predictor1 + predictor2 + predictor3
-model <- rpart(formula, data = data)
-plot(model)
+formula <- target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence
+tree_model <- rpart(formula, data = training)
+rpart.plot(tree_model)
+tree_predictions <- predict(tree_model, newdata = testing)
+#print(predictions)
 
-new_data <- data.frame(predictor1 = c(1, 2, 3), predictor2 = c(4, 5, 6), predictor3 = c(7, 8, 9))
-predictions <- predict(model, newdata = new_data)
-print(predictions)
 
+ctrl <- trainControl(method = "cv", number = 10) # 10-fold cross-validation
+tuneGrid <- expand.grid(.maxdepth = 1:10) # Specify the range of tree depths to tune
+modelDecTree <- train(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence, data = training, method = "rpart", trControl = ctrl)# #tuneGrid = tuneGrid)
+#optimal_depth <- modelDecTree$bestTune$.maxdepth
+
+cat("\n")
+mse_tree <- mean((tree_predictions - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_tree, "\n")
 ```
 
+Random Forest
 ```{r }
 library(randomForest)
-formula <- target ~ acousticness + danceability + duration_ms + energy + instrumentalness +             key + liveness + loudness + mode + speechiness + tempo + time_signature + valence
-# Build the Random Forest model
-model <- randomForest(formula, data = data, ntree = 500, mtry = 3)
-new_data <- data.frame(predictor1 = c(1, 2, 3), predictor2 = c(4, 5, 6), predictor3 = c(7, 8, 9))
-predictions <- predict(model, newdata = new_data)
+formulaRF <- target ~ acousticness + danceability + duration_ms + energy + instrumentalness +             key + liveness + loudness + mode + speechiness + tempo + time_signature + valence
 
-# View the predictions
-print(predictions)
+modelForest <- randomForest(formulaRF, data = training, ntree = 500, mtry = 3)
+predictionsForest <- predict(modelForest, newdata = testing)
+
+cat("\n")
+mse_forest <- mean((predictionsForest - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_forest, "\n")
+#print(predictionsForest)
+
 ```
 
 ```{r }
 
 ```
+
+
+```{r }
+tune_svm = tune.svm(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence,   data = training, kernel = 'radial', gamma=c(0.001, 0.01, 0.1, 1))
+                    
+fit_tuning_svm_radial = tune_svm$best.model
+tune_svm$best.model #0.083
+
+tune_svm = tune.svm(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence,
+data = training, kernel = 'polynomial', degree=c(1, 2, 3, 4))
+
+fit_tuning_svm_poly = tune_svm$best.model
+tune_svm$best.model
+
+
+radial_pred <- predict(fit_tuning_svm_radial, newdata = testing)
+svm_pred <- predict(fit_tuning_svm_poly, newdata = testing)
+
+cat("\n")
+mse_radial <- mean((radial_pred - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_radial, "\n")
+cat("\n")
+mse_poly <- mean((svm_pred - testing$target)^2)
+cat("Mean Squared Error (MSE):", mse_poly, "\n")
+```
+
+
+```{r }
+# Create a 2x3 matrix with some values
+mat <- matrix(c(mse, mse_knn, mse_pca, mse_svm, mse_tree, mse_forest, mse_radial, mse_poly), nrow = 1, ncol = 8)
+mat
+
+colnames(mat) <- c('LM','KNN', 'PCA', 'SVM', 'DT', 'RF','SVM_Rad','SVM_Poly')
+boxplot(mat, main = 'Test Error Rate')
+```
+
+```{r }
+
+```
+
