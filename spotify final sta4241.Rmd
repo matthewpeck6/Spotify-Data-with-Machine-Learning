@@ -109,7 +109,7 @@ mse_knn <- mean((pred_knn_model - testing$target)^2)
 cat("Mean Squared Error (MSE):", mse_knn, "\n")
 ```
 
-Cross Validaiton for PCA
+Cross Validation for PCA
 ```{r}
 library(caret)
 library(FactoMineR) 
@@ -125,7 +125,8 @@ train_pca <- as.data.frame(predict(pca, training[,1:ncol(training)-1])[,1:M])
 train_pca$target <- training$target
 
 # Train SVM with radial kernel using the first M principal components
-svm_model <- svm(target ~ ., data = train_pca, kernel = "radial")
+svm_model <- svm(target ~ ., data = train_pca, kernel = "radial",
+                 preProcess = "pca", trControl = trainControl(method = "cv", number = 10))
 
 # Use the trained model to make predictions on the testing data
 test_pca <- as.data.frame(predict(pca, testing[,1:ncol(testing)-1])[,1:M])
@@ -258,35 +259,42 @@ tune_svm = tune.svm(target ~ acousticness + danceability + duration_ms + energy 
 fit_tuning_svm_radial = tune_svm$best.model
 tune_svm$best.model #0.083
 
-tune_svm = tune.svm(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence,
-data = training, kernel = 'polynomial', degree=c(1, 2, 3, 4))
-
-fit_tuning_svm_poly = tune_svm$best.model
-tune_svm$best.model
 
 
 radial_pred <- predict(fit_tuning_svm_radial, newdata = testing)
-svm_pred <- predict(fit_tuning_svm_poly, newdata = testing)
 
 cat("\n")
 mse_radial <- mean((radial_pred - testing$target)^2)
 cat("Mean Squared Error (MSE):", mse_radial, "\n")
-cat("\n")
-mse_poly <- mean((svm_pred - testing$target)^2)
-cat("Mean Squared Error (MSE):", mse_poly, "\n")
 ```
 
 
 ```{r }
 # Create a 2x3 matrix with some values
-mat <- matrix(c(mse, mse_knn, mse_pca, mse_svm, mse_tree, mse_forest, mse_radial, mse_poly), nrow = 1, ncol = 8)
+mat <- matrix(c(mse, mse_knn, mse_pca, mse_svm, mse_tree, mse_forest, mse_radial), nrow = 1, ncol = 7)
 mat
 
-colnames(mat) <- c('LM','KNN', 'PCA', 'SVM', 'DT', 'RF','SVM_Rad','SVM_Poly')
+colnames(mat) <- c('LM','KNN', 'PCA', 'SVM', 'DT', 'RF','SVM_Rad')
 boxplot(mat, main = 'Test Error Rate')
+```
+
+SVM Poly
+```{r }
+#tune_svm = tune.svm(target ~ acousticness + danceability + duration_ms + energy + instrumentalness +  key + liveness + loudness + mode + tempo + time_signature + valence,
+#data = training, kernel = 'polynomial', degree=c(1, 2, 3, 4))
+
+#fit_tuning_svm_poly = tune_svm$best.model
+#tune_svm$best.model
+#poly_pred <- predict(fit_tuning_svm_poly, newdata = testing)
+#cat("\n")
+#mse_poly <- mean((svm_pred - testing$target)^2)
+#cat("Mean Squared Error (MSE):", mse_poly, "\n")
 ```
 
 ```{r }
 
 ```
 
+```{r }
+
+```
