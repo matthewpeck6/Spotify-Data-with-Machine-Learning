@@ -15,8 +15,31 @@ Temporary Kaggle Dataset
 #verify the model using testing
 #evaluate and score the model 
 
-my_directory = file.path("C:", "Users", "Matth", "Documents", "R", "STA4241 HW")       
-data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/data.csv")
+#my_directory = file.path("C:", "Users", "Matth", "Documents", "R", "STA4241 HW")       
+#data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/data.csv")
+
+#target <- data$target
+#acousticness <- data$acousticness
+#danceability <- data$danceability
+#duration_ms <- data$duration_ms
+#energy <- data$energy
+#instrumentalness <- data$instrumentalness
+#key <- data$key
+#liveness <- data$liveness
+#loudness<- data$loudness
+#mode <- data$mode
+#speechiness <- data$speechiness
+#tempo <- data$tempo
+#time_signature <- data$time_signature
+#valence <- data$valence
+
+#x <- as.matrix(data[,2:14])
+#y <- as.numeric(data[,15])
+```
+
+2022
+```{r }
+data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/mod_data_2022_final.csv")
 
 target <- data$target
 acousticness <- data$acousticness
@@ -37,31 +60,28 @@ x <- as.matrix(data[,2:14])
 y <- as.numeric(data[,15])
 ```
 
-January 9th 2020 - January 9th 2021
+2023 final
 ```{r }
-#data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/final_spotify_data_attributes_cleaned.csv")
-#data <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/final_spotify_data_attributes_no_speech.csv")
+#newdata <- read.csv("C:/Users/Matth/Documents/R/STA4241 HW/final/mod_data_2023_f.csv")
 
-#target <- data$target
-#danceability <- data$danceability
-#energy <- data$energy
-#key <- data$key
-#loudness<- data$loudness
-#mode <- data$mode
-##speechiness <- data$speechiness
-#acousticness <- data$acousticness
-#instrumentalness <- data$instrumentalness
-#liveness <- data$liveness
-#valence <- data$valence
-#tempo <- data$tempo
-#duration_ms <- data$duration_ms
-#time_signature <- data$time_signature
+#newtarget <- newdata$target
+#newacousticness <- newdata$acousticness
+#newdanceability <- newdata$danceability
+#newduration_ms <- newdata$duration_ms
+#newenergy <- newdata$energy
+#newinstrumentalness <- newdata$instrumentalness
+#newkey <- newdata$key
+#newliveness <- newdata$liveness
+#newloudness<- newdata$loudness
+#newmode <- newdata$mode
+#newspeechiness <- newdata$speechiness
+#newtempo <- newdata$tempo
+#newtime_signature <- newdata$time_signature
+#newvalence <- newdata$valence
 
-#x <- as.matrix(data[,2:14])
-#x <- as.matrix(data[,2:13])
-#y <- as.numeric(data[,1])
+#newx <- as.matrix(data[,2:14])
+#newy <- as.numeric(data[,15])
 ```
-
 
 Linear Regression Model
 ```{r }
@@ -206,7 +226,8 @@ energy, mode, valence (4, 9, 13)
 instrumentalness & speechiness (5, 10)
 duration_ms & loudness (3, 8)
 
-
+2022 DATA 
+(pc1 & pc7) (pc5 & pc12) (pc3 & pc13)
 
 
 
@@ -276,6 +297,10 @@ mat
 
 colnames(mat) <- c('LM','KNN', 'PCA', 'SVM', 'DT', 'RF','SVM_Rad')
 boxplot(mat, main = 'Test Error Rate')
+
+#mat<-matrix(c(mse_knn, mse_pca, mse_svm, mse_tree, mse_forest, mse_radial),nrow=1,ncol=6)
+#colnames(mat) <- c('KNN', 'PCA', 'SVM', 'DT', 'RF','SVM_Rad')
+#boxplot(mat, main = 'Test Error Rate')
 ```
 
 SVM Poly
